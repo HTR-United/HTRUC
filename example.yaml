@@ -1,0 +1,22 @@
+title: 'dahncorpus'
+url: 'https://github.com/HTR-United/dahncorpus'
+project-name: 'DAHN'
+project-website: 'https://digitalintellectuals.hypotheses.org/category/dahn'
+authors:
+    - name: 'Chiffoleau'
+      surname: 'Floriane'
+      roles:
+      - 'transcriber'
+description: 'Ground Truth dataset for French 20th typewritten OCR'
+language: 'french'
+script: 'latin'
+time: 1914--1924
+hands: 2
+license:
+    - {name: 'CC-BY 4.0', url: 'https://creativecommons.org/licenses/by/4.0/'}
+format: 'ALTO'
+volume:
+    - {count: "527", metric: pages}
+    - {count: "12482", metric: lines}
+    - {count: "546", metric: regions}
+    - {count: "472992", metric: characters}
