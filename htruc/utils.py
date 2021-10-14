@@ -1,4 +1,5 @@
 from typing import Union, TextIO, Dict, Any
+import os.path
 import yaml
 
 
@@ -9,8 +10,11 @@ def parse_yaml(file: Union[str, TextIO]) -> Dict[str, Any]:
     {'test': 'yes'}
     """
     if isinstance(file, str):
-        with open(file) as file:
-            content = file.read()
+        if os.path.isfile(file) and os.path.exists(file):
+            with open(file) as file:
+                content = file.read()
+        else:
+            content = file
     else:
         content = file.read()
     return yaml.load(content, Loader=yaml.Loader)
