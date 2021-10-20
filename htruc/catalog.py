@@ -61,7 +61,7 @@ def get_statistics(repositories: Dict[str, Catalog]) -> pandas.DataFrame:
     ]
     for repository, entry in repositories.items():
         try:
-            begin, end = entry["time"].split("--")
+            begin, end = entry["time"]["notBefore"], entry["time"]["notAfter"]
             for a_volume in entry.get("volume", []):
                 df.append({
                     "uri": repository,
@@ -69,7 +69,8 @@ def get_statistics(repositories: Dict[str, Catalog]) -> pandas.DataFrame:
                     "start": int(begin),
                     "end": int(end),
                     "metric": a_volume["metric"].lower(),
-                    "count": int(a_volume["count"])
+                    "count": int(a_volume["count"]),
+                    "format": entry["format"]
                 })
         except KeyError:
             logger.warning(f"Unable to parse {repository} for statistics")
@@ -79,12 +80,33 @@ def get_statistics(repositories: Dict[str, Catalog]) -> pandas.DataFrame:
 def group_per_year(df: pandas.DataFrame, column: Optional[str] = "metric", period: int = 50):
     """ Group a column per year
 
+    >>> group_per_year(pandas.DataFrame([
+    ... {"start": 1300, "end": 1399, "metric": "line", "count": 134},
+    ... {"start": 1300, "end": 1399, "metric": "characters", "count": 234},
+    ... {"start": 1350, "end": 1449, "metric": "line", "count": 34},
+    ... {"start": 1500, "end": 1551, "metric": "line", "count": 37}]))
+       year  characters   line
+    0  1300       234.0  134.0
+    1  1350       234.0  168.0
+    2  1400         0.0   34.0
+    3  1450         0.0    0.0
+    4  1500         0.0   37.0
+    5  1550         0.0   37.0
+
     """
-    new = []
-    all_values = df[column].unique().tolist()
-    for start in range(df.start.min(), df.end.max()+1, period):
-        for x in df[(df.start >= start) & (df.start <= start + period-1)].groupby(
-            "metric"
-        )[("count", "metric", "start")].sum("count"):
-            print(x)
-    return new
+    new_df = [
+        {
+            "year": range_start,
+            **df[
+                df.start.between(range_start, range_start+period-1) | \
+                df.end.between(range_start, range_start+period-1)
+            ].groupby(column)["count"].sum()
+        }
+        for range_start in range(
+            df.start.min(),
+            period * (df.end.max() // period) + int(bool(df.end.max() % period)),
+            period
+        )
+    ]
+    return pandas.DataFrame(new_df).fillna(0)
+

@@ -26,19 +26,14 @@ def _elipse(msg: str) -> str:
     return msg
 
 
-def get_schema(version: Optional[str] = None) -> Dict[str, Any]:
-    with open(os.path.join(os.path.dirname(__file__), "..", "tests", "schema.json")) as f:
-        schema = json.load(f)
-    return schema
-
-
-def run(files: Iterable[Union[TextIO, str]], schema_version: Optional[str] = None):
+def run(files: Iterable[Union[TextIO, str]], schema_path: str):
     """ Run tests on a catalog
 
-    >>> list(run(['tests/example.yaml']))
+    >>> list(run(['tests/example.yaml'], "./"))
     [Status(filename='tests/example.yaml', status=False, messages=["Path `format`: 'ALTO' is not one of ['Alto-XML', 'Page-XML']", "'licence' is a required property"])]
     """
-    schema = get_schema(version=schema_version)
+    with open(schema_path) as f:
+        schema = json.load(f)
     validator = Draft7Validator(schema)
     for file in files:
         # Parse the file
