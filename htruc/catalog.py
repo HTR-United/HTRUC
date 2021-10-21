@@ -75,6 +75,8 @@ def get_statistics(repositories: Dict[str, Catalog]) -> pandas.DataFrame:
                 })
         except KeyError:
             logger.warning(f"Unable to parse {repository} for statistics")
+        except TypeError:
+            logger.warning(f"Unable to parse {repository} for statistics")
     return pandas.DataFrame(df)
 
 
@@ -85,13 +87,15 @@ def group_per_year(df: pandas.DataFrame, column: Optional[str] = "metric", perio
     ... {"start": 1300, "end": 1399, "metric": "line", "count": 134},
     ... {"start": 1300, "end": 1399, "metric": "characters", "count": 234},
     ... {"start": 1350, "end": 1449, "metric": "line", "count": 34},
-    ... {"start": 1500, "end": 1551, "metric": "line", "count": 37}]))
+    ... {"start": 1500, "end": 1551, "metric": "line", "count": 37},
+    ... {"start": 1503, "end": 1504, "metric": "line", "count": 37},
+    ... {"start": 1300, "end": 1499, "metric": "line", "count": 2}]))
        year  characters   line
-    0  1300       234.0  134.0
-    1  1350       234.0  168.0
-    2  1400         0.0   34.0
-    3  1450         0.0    0.0
-    4  1500         0.0   37.0
+    0  1300       234.0  136.0
+    1  1350       234.0  170.0
+    2  1400         0.0   36.0
+    3  1450         0.0    2.0
+    4  1500         0.0   74.0
     5  1550         0.0   37.0
 
     """
@@ -100,11 +104,12 @@ def group_per_year(df: pandas.DataFrame, column: Optional[str] = "metric", perio
             "year": range_start,
             **df[
                 df.start.between(range_start, range_start+period-1) | \
-                df.end.between(range_start, range_start+period-1)
+                df.end.between(range_start, range_start+period-1) | \
+                ((df.start < range_start) & (range_start+period-1 < df.end))
             ].groupby(column)["count"].sum()
         }
         for range_start in range(
-            df.start.min(),
+            df.start.min() // period * period,
             period * (df.end.max() // period) + int(bool(df.end.max() % period)),
             period
         )

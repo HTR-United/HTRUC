@@ -3,6 +3,7 @@ downloaded.xsd
 *.png
 *.csv
 *.json
+/*.yaml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

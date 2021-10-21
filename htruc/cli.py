@@ -113,17 +113,32 @@ def make(directory, main_organization: str, access_token: Optional[str] = None, 
         if statistics:
             click.echo(f"Writing stats to {statistics}")
             stats.to_csv(statistics)
-        if graph or graph_json:
+        if graph or graph_csv:
             data = group_per_year(stats)
             if graph_csv:
                 click.echo(f"Plotting stats to {graph_csv}")
                 data.to_csv(graph_csv)
             if graph:
-                click.echo(f"Plotting stats to {graph}")
+                click.echo(f"Plotting {len(data.columns)-1} files with {graph} basename")
+                basedir, basename = os.path.dirname(graph), os.path.basename(graph)
+                basename = ".".join(basename.split(".")[:-1])
                 import matplotlib.pyplot as plot
-                fig = plot.figure(figsize=(10, 5), dpi=300)
-                data.plot.line(x="year", ax=fig.gca())
+
+                num_axes = len(data.columns) - 1
+                nrows = num_axes // 2 + int(bool(num_axes % 2))
+                fig, axes = plot.subplots(
+                    nrows=nrows,
+                    ncols=2,
+                    sharex=True,
+                    squeeze=True,
+                    figsize=(10, 5 * nrows),
+                    dpi=300
+                )
+                cols = [col for col in data.columns if col != "year"]
+                for metric, ax in zip(cols, [c for r in axes for c in r]):
+                    data.plot.line(x="year", y=metric, ax=ax)
                 fig.savefig(graph)
+                click.echo(f"Saved {graph}")
 
 
 if __name__ == "__main__":
