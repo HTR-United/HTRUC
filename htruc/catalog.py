@@ -70,7 +70,8 @@ def get_statistics(repositories: Dict[str, Catalog]) -> pandas.DataFrame:
                     "end": int(end),
                     "metric": a_volume["metric"].lower(),
                     "count": int(a_volume["count"]),
-                    "format": entry["format"]
+                    "format": entry["format"],
+                    "script-type": entry["script-type"]
                 })
         except KeyError:
             logger.warning(f"Unable to parse {repository} for statistics")
