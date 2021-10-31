@@ -103,9 +103,9 @@ setup(
     python_requires=REQUIRES_PYTHON,
     url=URL,
     # If your package is a single module, use this instead of 'packages':
-    packages=['htruc'],
-	package_data={'htruc': ['tests/*.json']},
-	include_package_data=True,
+    packages=find_packages(exclude=["tests"]),
+    package_data={'htruc': ['tests/*.json']},
+    include_package_data=True,
     entry_points={
         'console_scripts': ['htruc=htruc.cli:cli'],
     },
