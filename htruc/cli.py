@@ -103,7 +103,7 @@ def make(directory, main_organization: str, access_token: Optional[str] = None, 
     )
     click.echo(f"Dumping YAML output into {output}")
     with open(output, "w") as f:
-        yaml.dump(list(catalog.values()), f)
+        yaml.dump(list(catalog.values()), f, sort_keys=False)
 
     if json:
         click.echo(f"Dumping JSON output into {json}")
