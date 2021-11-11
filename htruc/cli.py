@@ -81,6 +81,8 @@ def test(files, version: str, force_download: bool):
                    "at different times")
 @click.option("--graph-csv", default=None, show_default=True,
               help="Outputs the data behind the graph into a CSV file")
+@click.option("--access_token", default=None, show_default=True,
+              help="Github Access token")
 @click.option("--statistics", default=None, show_default=True,
               help="Produce a recap CSV file with different statistics about the period covered by the dataset")
 def make(directory, main_organization: str, access_token: Optional[str] = None, remote: bool = True,
