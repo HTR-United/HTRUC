@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List, Tuple
 import os
 import logging
 import pandas
@@ -116,3 +116,28 @@ def group_per_year(df: pandas.DataFrame, column: Optional[str] = "metric", perio
     ]
     return pandas.DataFrame(new_df).fillna(0)
 
+
+MetricLists = List[Dict[str, int]]
+
+
+def update_volume(original_volume: MetricLists, metrics: MetricLists) -> Tuple[MetricLists, MetricLists]:
+    """ Compute the new metrics for a catalog, returns a difference list as a second output
+
+    >>> old = [{"metric": "pages", "count": 5}, {"metric": "documents", "count": 5}]
+    >>> new = [{"metric": "pages", "count": 10}, {"metric": "line", "count": 105}]
+    >>> out = update_volume(old, new)
+    >>> out == (
+    ...    [{"metric": "documents", "count": 5}, {"metric": "line", "count": 105}, {"metric": "pages", "count": 10}],
+    ...    [{"metric": "pages", "count": 5}],
+    ... )
+    True
+
+    """
+    old = {vol["metric"]: vol["count"] for vol in original_volume}
+    new = {vol["metric"]: vol["count"] for vol in metrics}
+    all_keys = sorted(list(set(old.keys()).union(set(new.keys()))))
+    diff = {key: new.get(key) - old.get(key) for key in all_keys if key in old and key in new}
+    return (
+        [{"metric": key, "count": new.get(key, old.get(key))} for key in all_keys],
+        [{"metric": key, "count": diff.get(key)} for key in diff]
+    )

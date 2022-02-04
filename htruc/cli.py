@@ -143,5 +143,33 @@ def make(directory, main_organization: str, access_token: Optional[str] = None, 
                 click.echo(f"Saved {graph}")
 
 
+@cli.command("update-metrics")
+@click.argument("catalog", type=click.File(), nargs=1)
+@click.argument("metrics-json", type=click.File(), nargs=1)
+@click.option(
+    "--version", type=str, default="2021-10-15", show_default=True,
+    help="Date of the schema version"
+)
+@click.option("--force-download", is_flag=True, help="Download the schema using the version provided")
+def catalog_metrics_update(files, version: str, force_download: bool):
+    """ Test catalog files """
+    click.echo(f"{len(files)} to be tested")
+    statuses = []
+    schema_path = _get_local_or_download(version, force_download=force_download)
+    for status in run(files, schema_path=schema_path):
+        statuses.append(status.status)
+        if status.status is False:
+            _error(f"☒ File `{status.filename}` testing failed")
+            for message in status.messages:
+                _error(f"  {message}")
+    click.echo()
+    click.echo(
+        click.style(
+            f"{statuses.count(True)/len(statuses)*100:.2f}% of schema passed ({statuses.count(True)}/{len(statuses)})",
+            fg="red" if False in statuses else "green"
+        )
+    )
+    sys.exit(-1 if False in statuses else 0)
+
 if __name__ == "__main__":
     cli()
