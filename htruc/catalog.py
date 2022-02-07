@@ -53,8 +53,8 @@ def get_all_catalogs(
 def get_statistics(repositories: Dict[str, Catalog]) -> pandas.DataFrame:
     """
 
-    >>> x = get_all_catalogs(local_directory="/home/thibault/dev/htr-united", check_link=False, get_distant=False)
-    >>> get_statistics(x).groupby(by="metric").sum()
+    >>> #x = get_all_catalogs(local_directory="/home/thibault/dev/htr-united", check_link=False, get_distant=False)
+    >>> #get_statistics(x).groupby(by="metric").sum()
     """
     df = [
 
@@ -90,13 +90,13 @@ def group_per_year(df: pandas.DataFrame, column: Optional[str] = "metric", perio
     ... {"start": 1500, "end": 1551, "metric": "line", "count": 37},
     ... {"start": 1503, "end": 1504, "metric": "line", "count": 37},
     ... {"start": 1300, "end": 1499, "metric": "line", "count": 2}]))
-       year  characters   line
-    0  1300       234.0  136.0
-    1  1350       234.0  170.0
-    2  1400         0.0   36.0
-    3  1450         0.0    2.0
-    4  1500         0.0   74.0
-    5  1550         0.0   37.0
+       year  characters  line
+    0  1300         234   136
+    1  1350         234   170
+    2  1400           0    36
+    3  1450           0     2
+    4  1500           0    74
+    5  1550           0    37
 
     """
     new_df = [
@@ -114,7 +114,7 @@ def group_per_year(df: pandas.DataFrame, column: Optional[str] = "metric", perio
             period
         )
     ]
-    return pandas.DataFrame(new_df).fillna(0)
+    return pandas.DataFrame(new_df).fillna(0).astype(int)
 
 
 MetricLists = List[Dict[str, int]]

@@ -3,11 +3,13 @@ import click
 import requests
 import os.path
 import yaml
+import json
 import matplotlib
 from typing import Optional
 
 from htruc.validator import run
-from htruc.catalog import get_all_catalogs, get_statistics, group_per_year
+from htruc.catalog import get_all_catalogs, get_statistics, group_per_year, update_volume
+from htruc.utils import parse_yaml
 
 
 def _error(message):
@@ -143,33 +145,39 @@ def make(directory, main_organization: str, access_token: Optional[str] = None, 
                 click.echo(f"Saved {graph}")
 
 
-@cli.command("update-metrics")
-@click.argument("catalog", type=click.File(), nargs=1)
+@cli.command("update-volumes")
+@click.argument("catalog-file", type=click.File(), nargs=1)
 @click.argument("metrics-json", type=click.File(), nargs=1)
 @click.option(
     "--version", type=str, default="2021-10-15", show_default=True,
     help="Date of the schema version"
 )
-@click.option("--force-download", is_flag=True, help="Download the schema using the version provided")
-def catalog_metrics_update(files, version: str, force_download: bool):
-    """ Test catalog files """
-    click.echo(f"{len(files)} to be tested")
-    statuses = []
-    schema_path = _get_local_or_download(version, force_download=force_download)
-    for status in run(files, schema_path=schema_path):
-        statuses.append(status.status)
-        if status.status is False:
-            _error(f"☒ File `{status.filename}` testing failed")
-            for message in status.messages:
-                _error(f"  {message}")
-    click.echo()
-    click.echo(
-        click.style(
-            f"{statuses.count(True)/len(statuses)*100:.2f}% of schema passed ({statuses.count(True)}/{len(statuses)})",
-            fg="red" if False in statuses else "green"
-        )
-    )
-    sys.exit(-1 if False in statuses else 0)
+@click.option(
+    "--inplace", type=bool, is_flag=True, default=False, show_default=True,
+    help="Saves the modified catalog inside the original file"
+)
+def catalog_volume_update(catalog_file, metrics_json, version, inplace):
+    """ Update the metrics of a file """
+    catalog = parse_yaml(catalog_file)
+    new = json.load(metrics_json)
+    updated, difference = update_volume(catalog.get("volume", []), new)
+    catalog["volume"] = updated
+    for metric in difference:
+        if metric["count"] < 0:
+            click.echo(click.style(f"> The category `{metric['metric']}` decreased by {abs(metric['count'])}",
+                                   fg="yellow"))
+        else:
+            click.echo(click.style(f"> The category `{metric['metric']}` increased by {metric['count']}", fg="green"))
+
+    # Close the original file
+    catalog_file.close()
+    filename = f"{catalog_file.name}"
+    if not inplace:
+        filename = filename.split(".")
+        filename = ".".join([*filename[:-1], "auto-update", filename[-1]])
+    with open(filename, "w") as f:
+        yaml.dump(catalog, f, sort_keys=False)
+
 
 if __name__ == "__main__":
     cli()

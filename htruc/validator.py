@@ -29,7 +29,7 @@ def _elipse(msg: str) -> str:
 def run(files: Iterable[Union[TextIO, str]], schema_path: str):
     """ Run tests on a catalog
 
-    >>> list(run(['tests/example.yaml'], "./"))
+    >>> list(run(['tests/test_data/example.yaml'], "./htruc/schemas/2021-10-15.json"))
     [Status(filename='tests/example.yaml', status=False, messages=["Path `format`: 'ALTO' is not one of ['Alto-XML', 'Page-XML']", "'licence' is a required property"])]
     """
     with open(schema_path) as f:
