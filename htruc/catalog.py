@@ -35,7 +35,6 @@ def get_all_catalogs(
 ):
     """
 
-    >>> get_statistics(local_directory="./")
     """
     data = {}
     if local_directory:

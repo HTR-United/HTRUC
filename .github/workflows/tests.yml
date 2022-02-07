@@ -21,4 +21,4 @@ jobs:
         python setup.py develop
     - name: Run ChocoMufin
       run: |
-        nosetests --with-doctest htruc --verbose
+        nosetests --with-doctest htruc --verbose ./tests
