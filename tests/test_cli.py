@@ -1,4 +1,6 @@
 from unittest import TestCase
+import yaml
+import json
 from click.testing import CliRunner
 
 
@@ -31,3 +33,24 @@ class TestCLI(TestCase):
         self.assertEqual(rs.exit_code, 0)
         self.assertIn("The category `lines` increased by 615", rs.output)
         self.assertIn("The category `regions` decreased by 10", rs.output)
+
+        with self.runner.isolated_filesystem():
+            with open("catalog.yml", "w") as f:
+                yaml.dump(new_catalog, f)
+            with open("update-metrics.json", "w") as f:
+                # Add 10 files
+                json.dump([{'metric': 'files', 'count': 30}], f)
+
+            rs = self.invoke(
+                ["update-volumes", "catalog.yml", "update-metrics.json",
+                 "--inplace"]
+            )
+            self.assertEqual(rs.exit_code, 0)
+            self.assertIn("The category `files` increased by 10", rs.output)
+
+            new_catalog = parse_yaml("catalog.yml")
+            self.assertEqual(
+                _sort_metrics(new_catalog["volume"]),
+                _sort_metrics([{'metric': 'characters', 'count': 481735}, {'metric': 'files', 'count': 30},
+                 {'metric': 'lines', 'count': 19000}, {'metric': 'regions', 'count': 1785}])
+            )

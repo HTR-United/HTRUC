@@ -175,6 +175,7 @@ def catalog_volume_update(catalog_file, metrics_json, version, inplace):
     if not inplace:
         filename = filename.split(".")
         filename = ".".join([*filename[:-1], "auto-update", filename[-1]])
+    click.echo(f"Writing the update volumes in {filename}")
     with open(filename, "w") as f:
         yaml.dump(catalog, f, sort_keys=False)
 
