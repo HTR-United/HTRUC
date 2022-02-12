@@ -8,9 +8,14 @@ authors:
       roles:
       - 'transcriber'
 description: 'Ground Truth dataset for French 20th typewritten OCR'
-language: 'French'
-script: 'Latin'
-time: 1914--1924
+language:
+  - 'fra'
+script:
+  - 'Latn'
+script-type: "only-manuscript"
+time:
+    notBefore: "1200"
+    notAfter: "1400"
 hands:
   count: "1"
   precision: "estimated"

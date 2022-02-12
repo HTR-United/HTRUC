@@ -6,7 +6,7 @@ import yaml
 def parse_yaml(file: Union[str, TextIO]) -> Dict[str, Any]:
     """ Parse a yaml file
 
-    >>> parse_yaml('tests/simple_yaml.yml')
+    >>> parse_yaml('tests/test_data/simple_yaml.yml')
     {'test': 'yes'}
     """
     if isinstance(file, str):

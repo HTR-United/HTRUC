@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List, Tuple
 import os
 import logging
 import pandas
@@ -35,7 +35,6 @@ def get_all_catalogs(
 ):
     """
 
-    >>> get_statistics(local_directory="./")
     """
     data = {}
     if local_directory:
@@ -53,8 +52,8 @@ def get_all_catalogs(
 def get_statistics(repositories: Dict[str, Catalog]) -> pandas.DataFrame:
     """
 
-    >>> x = get_all_catalogs(local_directory="/home/thibault/dev/htr-united", check_link=False, get_distant=False)
-    >>> get_statistics(x).groupby(by="metric").sum()
+    >>> #x = get_all_catalogs(local_directory="/home/thibault/dev/htr-united", check_link=False, get_distant=False)
+    >>> #get_statistics(x).groupby(by="metric").sum()
     """
     df = [
 
@@ -90,13 +89,13 @@ def group_per_year(df: pandas.DataFrame, column: Optional[str] = "metric", perio
     ... {"start": 1500, "end": 1551, "metric": "line", "count": 37},
     ... {"start": 1503, "end": 1504, "metric": "line", "count": 37},
     ... {"start": 1300, "end": 1499, "metric": "line", "count": 2}]))
-       year  characters   line
-    0  1300       234.0  136.0
-    1  1350       234.0  170.0
-    2  1400         0.0   36.0
-    3  1450         0.0    2.0
-    4  1500         0.0   74.0
-    5  1550         0.0   37.0
+       year  characters  line
+    0  1300         234   136
+    1  1350         234   170
+    2  1400           0    36
+    3  1450           0     2
+    4  1500           0    74
+    5  1550           0    37
 
     """
     new_df = [
@@ -114,5 +113,30 @@ def group_per_year(df: pandas.DataFrame, column: Optional[str] = "metric", perio
             period
         )
     ]
-    return pandas.DataFrame(new_df).fillna(0)
+    return pandas.DataFrame(new_df).fillna(0).astype(int)
 
+
+MetricLists = List[Dict[str, int]]
+
+
+def update_volume(original_volume: MetricLists, metrics: MetricLists) -> Tuple[MetricLists, MetricLists]:
+    """ Compute the new metrics for a catalog, returns a difference list as a second output
+
+    >>> old = [{"metric": "pages", "count": 5}, {"metric": "documents", "count": 5}]
+    >>> new = [{"metric": "pages", "count": 10}, {"metric": "line", "count": 105}]
+    >>> out = update_volume(old, new)
+    >>> out == (
+    ...    [{"metric": "documents", "count": 5}, {"metric": "line", "count": 105}, {"metric": "pages", "count": 10}],
+    ...    [{"metric": "pages", "count": 5}],
+    ... )
+    True
+
+    """
+    old = {vol["metric"]: vol["count"] for vol in original_volume}
+    new = {vol["metric"]: vol["count"] for vol in metrics}
+    all_keys = sorted(list(set(old.keys()).union(set(new.keys()))))
+    diff = {key: new.get(key) - old.get(key) for key in all_keys if key in old and key in new}
+    return (
+        [{"metric": key, "count": new.get(key, old.get(key))} for key in all_keys],
+        [{"metric": key, "count": diff.get(key)} for key in diff]
+    )

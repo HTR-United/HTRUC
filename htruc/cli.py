@@ -3,11 +3,13 @@ import click
 import requests
 import os.path
 import yaml
+import json
 import matplotlib
 from typing import Optional
 
 from htruc.validator import run
-from htruc.catalog import get_all_catalogs, get_statistics, group_per_year
+from htruc.catalog import get_all_catalogs, get_statistics, group_per_year, update_volume
+from htruc.utils import parse_yaml
 
 
 def _error(message):
@@ -141,6 +143,41 @@ def make(directory, main_organization: str, access_token: Optional[str] = None, 
                     data.plot.line(x="year", y=metric, ax=ax)
                 fig.savefig(graph)
                 click.echo(f"Saved {graph}")
+
+
+@cli.command("update-volumes")
+@click.argument("catalog-file", type=click.File(), nargs=1)
+@click.argument("metrics-json", type=click.File(), nargs=1)
+@click.option(
+    "--version", type=str, default="2021-10-15", show_default=True,
+    help="Date of the schema version"
+)
+@click.option(
+    "--inplace", type=bool, is_flag=True, default=False, show_default=True,
+    help="Saves the modified catalog inside the original file"
+)
+def catalog_volume_update(catalog_file, metrics_json, version, inplace):
+    """ Update the metrics of a file """
+    catalog = parse_yaml(catalog_file)
+    new = json.load(metrics_json)
+    updated, difference = update_volume(catalog.get("volume", []), new)
+    catalog["volume"] = updated
+    for metric in difference:
+        if metric["count"] < 0:
+            click.echo(click.style(f"> The category `{metric['metric']}` decreased by {abs(metric['count'])}",
+                                   fg="yellow"))
+        else:
+            click.echo(click.style(f"> The category `{metric['metric']}` increased by {metric['count']}", fg="green"))
+
+    # Close the original file
+    catalog_file.close()
+    filename = f"{catalog_file.name}"
+    if not inplace:
+        filename = filename.split(".")
+        filename = ".".join([*filename[:-1], "auto-update", filename[-1]])
+    click.echo(f"Writing the update volumes in {filename}")
+    with open(filename, "w") as f:
+        yaml.dump(catalog, f, sort_keys=False)
 
 
 if __name__ == "__main__":
