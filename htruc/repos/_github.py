@@ -39,7 +39,7 @@ def get_github_repo_yaml(
 def get_htr_united_repos(
         access_token: Optional[str] = None,
         main_organization: str = "htr-united",
-        exclude: Tuple[str, ...] = ("htr-united", )
+        exclude: Tuple[str, ...] = ("htr-united", "template-htr-united-datarepo", )
 ) -> Dict[str, Catalog]:
     """ Get a single repo specific tokens
 

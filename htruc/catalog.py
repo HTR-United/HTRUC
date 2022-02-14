@@ -31,7 +31,8 @@ def get_all_catalogs(
     local_directory: Optional[str] = None,
     get_distant: bool = True,
     main_organization: Optional[str] = "htr-united",
-    check_link: bool = False
+    check_link: bool = False,
+    ignore_orgs_gits: List[str] = None
 ):
     """
 
@@ -45,7 +46,13 @@ def get_all_catalogs(
                 if "github.com" in uri:
                     data[uri] = get_github_repo_yaml(address=uri, access_token=access_token)
     if get_distant:
-        data.update(get_htr_united_repos(access_token=access_token, main_organization=main_organization))
+        data.update(
+            get_htr_united_repos(
+                access_token=access_token,
+                main_organization=main_organization,
+                exclude=ignore_orgs_gits
+            )
+        )
     return data
 
 

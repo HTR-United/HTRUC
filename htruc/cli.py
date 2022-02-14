@@ -5,7 +5,7 @@ import os.path
 import yaml
 import json
 import matplotlib
-from typing import Optional
+from typing import Optional, List
 
 from htruc.validator import run
 from htruc.catalog import get_all_catalogs, get_statistics, group_per_year, update_volume
@@ -87,12 +87,15 @@ def test(files, version: str, force_download: bool):
               help="Github Access token")
 @click.option("--statistics", default=None, show_default=True,
               help="Produce a recap CSV file with different statistics about the period covered by the dataset")
+@click.option("--ignore-repo", default=["htr-united", "template-htr-united-datarepo"], multiple=True, show_default=True,
+              help="Repos of the main organization that can be ignored")
 def make(directory, main_organization: str, access_token: Optional[str] = None, remote: bool = True,
          check_link: bool = False, output: str = "catalog.yaml",
          json: Optional[str] = None,
          graph: Optional[str] = None,
          statistics: Optional[str] = None,
-         graph_csv: Optional[str] = None):
+         graph_csv: Optional[str] = None,
+         ignore_repo: List[str] = None):
     """ Generate a catalog from a main repository and an organization
 
     """
@@ -101,7 +104,8 @@ def make(directory, main_organization: str, access_token: Optional[str] = None, 
         main_organization=main_organization,
         local_directory=directory,
         get_distant=remote,
-        check_link=check_link
+        check_link=check_link,
+        ignore_orgs_gits=ignore_repo
     )
     click.echo(f"Dumping YAML output into {output}")
     with open(output, "w") as f:
