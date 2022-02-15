@@ -1,3 +1,5 @@
+<img src="./img/HTRUC.png" width=300 align=right>
+
 HTRUC
 =====
 
