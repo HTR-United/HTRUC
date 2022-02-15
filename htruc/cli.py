@@ -9,7 +9,7 @@ from typing import Optional, List
 
 from htruc.validator import run
 from htruc.catalog import get_all_catalogs, get_statistics, group_per_year, update_volume
-from htruc.utils import parse_yaml
+from htruc.utils import parse_yaml, create_json_catalog
 
 
 def _error(message):
@@ -89,13 +89,16 @@ def test(files, version: str, force_download: bool):
               help="Produce a recap CSV file with different statistics about the period covered by the dataset")
 @click.option("--ignore-repo", default=["htr-united", "template-htr-united-datarepo"], multiple=True, show_default=True,
               help="Repos of the main organization that can be ignored")
+@click.option("--ids", default="ids.json", type=click.Path(dir_okay=False), show_default=True,
+              help="JSON file with IDs that maps each repository URLs")
 def make(directory, main_organization: str, access_token: Optional[str] = None, remote: bool = True,
          check_link: bool = False, output: str = "catalog.yaml",
          json: Optional[str] = None,
          graph: Optional[str] = None,
          statistics: Optional[str] = None,
          graph_csv: Optional[str] = None,
-         ignore_repo: List[str] = None):
+         ignore_repo: List[str] = None,
+         ids: click.File = None):
     """ Generate a catalog from a main repository and an organization
 
     """
@@ -115,7 +118,7 @@ def make(directory, main_organization: str, access_token: Optional[str] = None, 
         click.echo(f"Dumping JSON output into {json}")
         from json import dump
         with open(json, "w") as f:
-            dump(catalog, f)
+            dump(create_json_catalog(catalog, ids_files=ids), f)
     if graph or statistics or graph_csv:
         stats = get_statistics(catalog)
         if statistics:
