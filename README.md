@@ -22,3 +22,7 @@ Either clone and run `python setup.py install` **or** use the pip version `pip i
 
 Simply run `htruc test YourYamlFile.yml`
 
+
+---
+
+Logo by [Alix Chagué](https://alix-tz.github.io).
