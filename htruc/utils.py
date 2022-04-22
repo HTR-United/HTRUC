@@ -1,6 +1,7 @@
 from typing import Union, TextIO, Dict, Any, List, Optional
 import os.path
 import yaml
+import requests
 import json
 
 
@@ -37,3 +38,18 @@ def create_json_catalog(catalog: Dict[str, Dict], ids_files: Optional[str]) -> D
         ids[key]: catalog[key]
         for key in catalog
     }
+
+
+def get_local_or_download(version, force_download: bool = False, is_uri: bool = False):
+    if is_uri:
+        version = version.split("/")[-2]
+    basedir = os.path.dirname(__file__)
+    local_path = os.path.join(basedir, "schemas", f"{version}.json")
+    if not force_download and os.path.exists(local_path):
+        return local_path
+    else:
+        req = requests.get(f"https://htr-united.github.io/schema/{version}/schema.json")
+        req.raise_for_status()
+        with open(local_path, "w") as f:
+            f.write(req.text)
+        return local_path
