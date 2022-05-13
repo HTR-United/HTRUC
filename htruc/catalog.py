@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any, List, Tuple
+from typing import Optional, Dict, Any, List, Tuple, Iterable, Union
 import os
 import logging
 import pandas
@@ -30,7 +30,7 @@ def get_all_catalogs(
     access_token: Optional[str] = None,
     local_directory: Optional[str] = None,
     get_distant: bool = True,
-    main_organization: Optional[str] = "htr-united",
+    organizations: Optional[Union[str, Iterable[str]]] = "htr-united",
     check_link: bool = False,
     ignore_orgs_gits: List[str] = None
 ):
@@ -46,13 +46,16 @@ def get_all_catalogs(
                 if "github.com" in uri:
                     data[uri] = get_github_repo_yaml(address=uri, access_token=access_token)
     if get_distant:
-        data.update(
-            get_htr_united_repos(
-                access_token=access_token,
-                main_organization=main_organization,
-                exclude=ignore_orgs_gits
+        if isinstance(organizations, str):
+            organizations = (organizations, )
+        for orga in organizations:
+            data.update(
+                get_htr_united_repos(
+                    access_token=access_token,
+                    main_organization=orga,
+                    exclude=ignore_orgs_gits
+                )
             )
-        )
     return data
 
 

@@ -67,7 +67,7 @@ def test(files, version: str, force_download: bool):
 
 @cli.command("make")
 @click.argument("directory", default="./catalog/")
-@click.option("-m", "--main-organization", default="htr-united", show_default=True,
+@click.option("-o", "--organization", default=("htr-united", ), show_default=True, multiple=True,
               help="Organization to retrieve repositories from")
 @click.option("--remote/--no-remote", is_flag=True, default=True, show_default=True,
               help="Retrieve data from remote repositories in the organization's account")
@@ -91,7 +91,7 @@ def test(files, version: str, force_download: bool):
               help="Repos of the main organization that can be ignored")
 @click.option("--ids", default="ids.json", type=click.Path(dir_okay=False), show_default=True,
               help="JSON file with IDs that maps each repository URLs")
-def make(directory, main_organization: str, access_token: Optional[str] = None, remote: bool = True,
+def make(directory, organization: str, access_token: Optional[str] = None, remote: bool = True,
          check_link: bool = False, output: str = "catalog.yaml",
          json: Optional[str] = None,
          graph: Optional[str] = None,
@@ -104,7 +104,7 @@ def make(directory, main_organization: str, access_token: Optional[str] = None, 
     """
     catalog = get_all_catalogs(
         access_token=access_token,
-        main_organization=main_organization,
+        organizations=organization,
         local_directory=directory,
         get_distant=remote,
         check_link=check_link,
