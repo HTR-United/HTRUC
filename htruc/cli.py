@@ -1,15 +1,13 @@
 import sys
 import click
-import requests
 import os.path
 import yaml
 import json
-import matplotlib
 from typing import Optional, List
 
 from htruc.validator import run
 from htruc.catalog import get_all_catalogs, get_statistics, group_per_year, update_volume
-from htruc.utils import parse_yaml, create_json_catalog
+from htruc.utils import parse_yaml, create_json_catalog, get_local_or_download
 
 
 def _error(message):
@@ -17,19 +15,6 @@ def _error(message):
         click.style(message, fg="red"),
         color=True
     )
-
-
-def _get_local_or_download(version, force_download: bool = False):
-    basedir = os.path.dirname(__file__)
-    local_path = os.path.join(basedir, "schemas", f"{version}.json")
-    if not force_download and os.path.exists(local_path):
-        return local_path
-    else:
-        req = requests.get(f"https://htr-united.github.io/schema/{version}/schema.json")
-        req.raise_for_status()
-        with open(local_path, "w") as f:
-            f.write(req.text)
-        return local_path
 
 
 @click.group()
@@ -40,7 +25,7 @@ def cli():
 @cli.command("test")
 @click.argument("files", type=click.File(), nargs=-1)
 @click.option(
-    "--version", type=str, default="2021-10-15", show_default=True,
+    "--version", type=str, default="auto", show_default=True,
     help="Date of the schema version"
 )
 @click.option("--force-download", is_flag=True, help="Download the schema using the version provided")
@@ -48,8 +33,9 @@ def test(files, version: str, force_download: bool):
     """ Test catalog files """
     click.echo(f"{len(files)} to be tested")
     statuses = []
-    schema_path = _get_local_or_download(version, force_download=force_download)
-    for status in run(files, schema_path=schema_path):
+    if version != "auto":
+        version = get_local_or_download(version, force_download=force_download)
+    for status in run(files, schema_path=version):
         statuses.append(status.status)
         if status.status is False:
             _error(f"☒ File `{status.filename}` testing failed")

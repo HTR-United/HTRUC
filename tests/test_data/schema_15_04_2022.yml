@@ -1,0 +1,39 @@
+schema: https://htr-united.github.io/schema/2022-04-15/schema.json
+title: DecameronFR
+url: https://github.com/PSL-Chartes-HTR-Students/TNAH-2021-DecameronFR
+authors:
+  - name: Author Name
+    surname: ''
+    type: institution
+    roles:
+      - transcriber
+      - aligner
+  - name: Person
+    surname: LALA
+    type: person
+    orcid: 5555-5555-7777-8988
+    roles:
+      - digitization
+      - support
+description: Test depot
+language:
+  - aaa
+production-software: eScriptorium + Kraken
+script:
+  - iso: Latn
+    qualify: Some details
+script-type: only-manuscript
+time:
+  notBefore: '800'
+  notAfter: '1900'
+hands:
+  count: '1'
+  precision: exact
+license:
+  - name: CC-BY 4.0
+    url: https://creativecommons.org/licenses/by/4.0/
+format: Alto-XML
+volume:
+  - metric: lines
+    count: 500
+
