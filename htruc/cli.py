@@ -87,7 +87,7 @@ def test(files, version: str, force_download: bool):
               help="Github Access token")
 @click.option("--statistics", default=None, show_default=True,
               help="Produce a recap CSV file with different statistics about the period covered by the dataset")
-@click.option("--ignore-repo", default=["htr-united", "template-htr-united-datarepo"], multiple=True, show_default=True,
+@click.option("--ignore-repo", default=["htr-united", "template-htr-united-datarepo", "template-depot"], multiple=True, show_default=True,
               help="Repos of the main organization that can be ignored")
 @click.option("--ids", default="ids.json", type=click.Path(dir_okay=False), show_default=True,
               help="JSON file with IDs that maps each repository URLs")
@@ -185,6 +185,23 @@ def catalog_volume_update(catalog_file, metrics_json, version, inplace):
     click.echo(f"Writing the update volumes in {filename}")
     with open(filename, "w") as f:
         yaml.dump(catalog, f, sort_keys=False)
+
+
+@cli.command("upgrade")
+@click.argument("files", type=click.File(), nargs=-1)
+def upgrade(files):
+    """ Upgrade [FILES] to the latest supported schema """
+    for file in files:
+        click.echo(click.style(f"Upgrading {file.name}", fg="green"))
+        catalog = parse_yaml(file)
+        from htruc.schemas import recursive_update
+        catalog, upgrade_order = recursive_update(catalog)
+        if not upgrade_order:
+            click.echo(click.style(f"--> No upgrade required", fg="yellow"))
+            continue
+        file.close()
+        with open(file.name, "w") as f:
+            yaml.dump(catalog, f, sort_keys=False)
 
 
 if __name__ == "__main__":

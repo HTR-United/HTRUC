@@ -9,7 +9,7 @@
         "description": "Schema version used",
         "type": "string",
         "enum": [
-            "https://htr-united.github.io/2021-10-15/schema.json"
+            "https://htr-united.github.io/schema/2021-10-15/schema.json"
         ]
     },
     "title": {
