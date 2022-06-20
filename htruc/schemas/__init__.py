@@ -1,12 +1,7 @@
 from typing import Dict, Tuple, Callable, AnyStr, Iterable
-from htruc.schemas.upgrade_path import upgrade_2021_10_15_to_2022_04_15, CatalogRecord
+from htruc.schemas.upgrade_path import upgrade_2021_10_15_to_2022_04_15
+from htruc.types import SchemaVersion, CatalogRecord
 
-
-def get_list():
-    raise NotImplementedError()
-
-
-SchemaVersion = AnyStr
 
 # This Tuple is used to know which schema are supported
 UpgradeOrder: Tuple[SchemaVersion, ...] = (

@@ -5,14 +5,43 @@ import pandas
 
 from htruc.repos import get_github_repo_yaml, get_htr_united_repos, get_a_yaml
 from htruc.utils import parse_yaml
-
-
+from htruc import validator
+from htruc.schemas import recursive_update
+from htruc.types import CatalogRecord, Catalog
 logger = logging.getLogger()
 
-Catalog = Dict[str, Any]
+
+def _clean_a_dict(catalog: Catalog) -> Catalog:
+    invalid: List[str] = []
+
+    for schema in catalog:
+        for status in validator.run([catalog[schema]], schema_path="auto"):
+            if not status.status:  # If the schema is invalid
+                invalid.append(schema)
+                logging.warning(f"Invalid schema file for {schema}")
+
+    for key in invalid:
+        del catalog[key]
+
+    return catalog
 
 
-def get_local_yaml(directory: str) -> Dict[str, Catalog]:
+def _upgrade_a_dict(catalog: Catalog) -> Catalog:
+    for schema in catalog:
+        new_version, nb_upgrade = recursive_update(catalog[schema])
+        if nb_upgrade:
+            catalog[schema] = new_version
+
+    return catalog
+
+
+def get_local_yaml(directory: str, keep_valid_only: bool = True) -> Catalog:
+    """ Reads all local YAML file in a given directory and parses them as Catalog Record.
+
+    :param directory: Directory to scan
+    :param keep_valid_only: Only keeps passing HTR-United files
+
+    """
     out = {}
     for root, dirs, files in os.walk(directory):
         for file in files:
@@ -23,6 +52,8 @@ def get_local_yaml(directory: str) -> Dict[str, Catalog]:
                 except Exception as E:
                     logging.warning(f"Impossible to parse and understand {file}")
                     logger.info(str(E))
+    if keep_valid_only:
+        _clean_a_dict(out)
     return out
 
 
@@ -32,14 +63,26 @@ def get_all_catalogs(
     get_distant: bool = True,
     organizations: Optional[Union[str, Iterable[str]]] = "htr-united",
     check_link: bool = False,
-    ignore_orgs_gits: List[str] = None
-):
-    """
+    ignore_orgs_gits: List[str] = None,
+    keep_valid_only: bool = True,
+    auto_upgrade: bool = False
+) -> Catalog:
+    """ Retrieve repositories from various location (online, locally) and create a catalog out of the records.
 
+    :param access_token: Github Access Token to retrieve information ~ without limit from Github.com
+    :param local_directory: Local directory to scan for files
+    :param get_distant: Retrieves data from organisations on Github (Scan all their repositories)
+    :param organizations: Organizations to scan
+    :param check_link: If a local directory catalog record links to a github repository, scan the remote repository
+        for any updates on the catalog
+    :param ignore_orgs_gits: Ignore specific repositories in the scan
+    :param keep_valid_only: Only Keeps valid catalog record
+    :param auto_upgrade: Upgrade automatically all schemas to the latest version (Only applied if keep_valid_only is
+        True)
     """
     data = {}
     if local_directory:
-        data.update(get_local_yaml(directory=local_directory))
+        data.update(get_local_yaml(directory=local_directory, keep_valid_only=False))
         if check_link:
             for uri in data:
                 # We update the catalog if needs be by checking each repo
@@ -56,11 +99,17 @@ def get_all_catalogs(
                     exclude=ignore_orgs_gits
                 )
             )
+    if keep_valid_only:
+        _clean_a_dict(data)
+    if auto_upgrade and keep_valid_only:
+        _upgrade_a_dict(data)
     return data
 
 
-def get_statistics(repositories: Dict[str, Catalog]) -> pandas.DataFrame:
-    """
+def get_statistics(repositories: Catalog) -> pandas.DataFrame:
+    """ Retrieve statistics from a diction of repositories
+
+    :param repositories: Dictionary of Repositories records
 
     >>> #x = get_all_catalogs(local_directory="/home/thibault/dev/htr-united", check_link=False, get_distant=False)
     >>> #get_statistics(x).groupby(by="metric").sum()

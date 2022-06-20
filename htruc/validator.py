@@ -1,9 +1,8 @@
 from typing import Iterable, List, TextIO, Dict, Any, Optional, Union
 from dataclasses import dataclass
 import json
-import os
 
-from jsonschema import validate, ValidationError, Draft7Validator
+from jsonschema import Draft7Validator
 from yaml.parser import ParserError
 
 from htruc.utils import parse_yaml, get_local_or_download
@@ -26,8 +25,15 @@ def _elipse(msg: str) -> str:
     return msg
 
 
-def run(files: Iterable[Union[TextIO, str]], schema_path: str):
+def run(
+        files: Iterable[Union[TextIO, str, Dict[str, Any]]],
+        schema_path: str = "auto"
+):
     """ Run tests on a catalog
+
+    :param files: List of URIs, file IO or already parsed catalog records,
+    :param schema_path: Path to the schema. `auto` will download the schema from HTR-United
+    :returns: A generator of 1 Status per file
 
     >>> list(run(['tests/test_data/example.yaml'], "./htruc/schemas/2021-10-15.json"))
     [Status(filename='tests/test_data/example.yaml', status=False, messages=["Path `format`: 'ALTO' is not one of ['Alto-XML', 'Page-XML']", "'schema' is a required property"])]
@@ -40,16 +46,23 @@ def run(files: Iterable[Union[TextIO, str]], schema_path: str):
 
     for file in files:
         # Parse the file
-        filename = file if isinstance(file, str) else file.name
-        try:
-            parsed = parse_yaml(file)
-        except ParserError as e:
-            yield Status(filename, False, [f"Parse error: {_reformat_errors(e)}"])
-            continue
+        if isinstance(file, dict):  # If it's preparsed
+            filename = file.get("url", "Potential invalid SCHEMA without URI")
+            parsed = file
+        else:
+            filename = file if isinstance(file, str) else file.name
+            try:
+                parsed = parse_yaml(file)
+            except ParserError as e:
+                yield Status(filename, False, [f"Parse error: {_reformat_errors(e)}"])
+                continue
 
         local_validator = validator
         if not validator:
-            if parsed["schema"].startswith("https://htr-united.github.io/schema/"):
+            if "schema" not in parsed:
+                yield Status(filename, False, [f"Schema key not found."])
+                continue
+            elif parsed["schema"].startswith("https://htr-united.github.io/schema/"):
                 local_validator = get_local_or_download(parsed["schema"], is_uri=True)
                 with open(local_validator) as f:
                     schema = json.load(f)
@@ -67,15 +80,3 @@ def run(files: Iterable[Union[TextIO, str]], schema_path: str):
                 if error.path else _elipse(error.message)
             for error in local_validator.iter_errors(parsed)
         ])
-        #    yield
-        #raise Exception
-        #raise Exception
-
-        # Validate the file
-        #try:
-        #    validate(parsed, schema=schema)
-        #    yield Status(filename, True, [])
-        #except ValidationError as validation_error:
-        #    print(validation_error.errors)
-        #     yield Status(filename, False, [])
-

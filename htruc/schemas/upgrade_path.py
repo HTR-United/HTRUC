@@ -1,9 +1,8 @@
-from typing import Dict, Any
 import logging
 import click
+from htruc.types import CatalogRecord
 
 
-CatalogRecord = Dict[str, Any]
 Logger = logging.getLogger(__name__)
 
 

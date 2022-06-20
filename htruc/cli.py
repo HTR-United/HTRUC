@@ -57,6 +57,10 @@ def test(files, version: str, force_download: bool):
               help="Organization to retrieve repositories from")
 @click.option("--remote/--no-remote", is_flag=True, default=True, show_default=True,
               help="Retrieve data from remote repositories in the organization's account")
+@click.option("--clean/--dirty", is_flag=True, default=True, show_default=True,
+              help="Keep only the valid catalog records")
+@click.option("--auto-upgrade/--no-auto-upgrade", is_flag=True, default=True, show_default=True,
+              help="Automatically upgrade to the latest schema")
 @click.option("--check-link", is_flag=True, default=False, show_default=True,
               help="For each github repository documented in the local files, tries to download a `htr-united.yaml`"
                    " file from it.")
@@ -84,7 +88,9 @@ def make(directory, organization: str, access_token: Optional[str] = None, remot
          statistics: Optional[str] = None,
          graph_csv: Optional[str] = None,
          ignore_repo: List[str] = None,
-         ids: click.File = None):
+         ids: click.File = None,
+         auto_upgrade: bool = True,
+         clean: bool = True):
     """ Generate a catalog from a main repository and an organization
 
     """
@@ -94,7 +100,9 @@ def make(directory, organization: str, access_token: Optional[str] = None, remot
         local_directory=directory,
         get_distant=remote,
         check_link=check_link,
-        ignore_orgs_gits=ignore_repo
+        ignore_orgs_gits=ignore_repo,
+        keep_valid_only=clean,
+        auto_upgrade=auto_upgrade
     )
     click.echo(f"Dumping YAML output into {output}")
     with open(output, "w") as f:
