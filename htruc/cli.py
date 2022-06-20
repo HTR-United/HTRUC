@@ -142,19 +142,16 @@ def make(directory, organization: str, access_token: Optional[str] = None, remot
 @click.argument("catalog-file", type=click.File(), nargs=1)
 @click.argument("metrics-json", type=click.File(), nargs=1)
 @click.option(
-    "--version", type=str, default="2021-10-15", show_default=True,
-    help="Date of the schema version"
-)
-@click.option(
     "--inplace", type=bool, is_flag=True, default=False, show_default=True,
     help="Saves the modified catalog inside the original file"
 )
-def catalog_volume_update(catalog_file, metrics_json, version, inplace):
+def catalog_volume_update(catalog_file, metrics_json, inplace):
     """ Update the metrics of a file """
-    catalog = parse_yaml(catalog_file)
-    new = json.load(metrics_json)
-    updated, difference = update_volume(catalog.get("volume", []), new)
-    catalog["volume"] = updated
+    record = parse_yaml(catalog_file)
+    parsed_metrics = json.load(metrics_json)
+    metrics_volume = parsed_metrics["volume"]
+    updated, difference = update_volume(record.get("volume", []), metrics_volume)
+    record["volume"] = updated
     for metric in difference:
         if metric["count"] < 0:
             click.echo(click.style(f"> The category `{metric['metric']}` decreased by {abs(metric['count'])}",
@@ -164,13 +161,19 @@ def catalog_volume_update(catalog_file, metrics_json, version, inplace):
 
     # Close the original file
     catalog_file.close()
+
+    if record["schema"] != "2021-10-15" and "characters" in parsed_metrics:
+        if "characters" not in record:
+            record["characters"] = {}
+        record["characters"].update(parsed_metrics["characters"])
+
     filename = f"{catalog_file.name}"
     if not inplace:
         filename = filename.split(".")
         filename = ".".join([*filename[:-1], "auto-update", filename[-1]])
     click.echo(f"Writing the update volumes in {filename}")
     with open(filename, "w") as f:
-        yaml.dump(catalog, f, sort_keys=False)
+        yaml.dump(record, f, sort_keys=False)
 
 
 @cli.command("upgrade")
