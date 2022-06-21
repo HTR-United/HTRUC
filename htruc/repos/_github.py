@@ -36,6 +36,29 @@ def get_github_repo_yaml(
         return None
 
 
+def get_github_repo_cff(
+        address: str,
+        access_token: Optional[str] = None) -> Optional[str]:
+    """
+
+    >>> get_github_repo_yaml("github.com/htr-united/cremma-medieval.git")["title"]
+    'Cremma Medieval'
+    """
+
+    user, repo_name = re.findall("github.com/([^/]+)/([^/]+)", address)[0]
+    if repo_name.endswith(".git"):
+        repo_name = repo_name[:-4]
+    g = Github(access_token)
+    repo = g.get_repo(f"{user}/{repo_name}")
+    for github_content in repo.get_contents(""):
+        if github_content.name.lower() == "citation.cff":
+            try:
+                text = repo.get_contents(github_content.name).decoded_content.decode()
+                return text
+            except UnknownObjectException as e:
+                return None
+
+
 def get_htr_united_repos(
         access_token: Optional[str] = None,
         main_organization: str = "htr-united",

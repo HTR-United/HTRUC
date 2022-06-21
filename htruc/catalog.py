@@ -2,8 +2,10 @@ from typing import Optional, Dict, Any, List, Tuple, Iterable, Union
 import os
 import logging
 import pandas
+import cffconvert
+import requests
 
-from htruc.repos import get_github_repo_yaml, get_htr_united_repos, get_a_yaml
+from htruc.repos import get_github_repo_yaml, get_htr_united_repos, get_github_repo_cff
 from htruc.utils import parse_yaml
 from htruc import validator
 from htruc.schemas import recursive_update
@@ -65,7 +67,8 @@ def get_all_catalogs(
     check_link: bool = False,
     ignore_orgs_gits: List[str] = None,
     keep_valid_only: bool = True,
-    auto_upgrade: bool = False
+    auto_upgrade: bool = False,
+    citation_cff: bool = False
 ) -> Catalog:
     """ Retrieve repositories from various location (online, locally) and create a catalog out of the records.
 
@@ -103,6 +106,9 @@ def get_all_catalogs(
         _clean_a_dict(data)
     if auto_upgrade and keep_valid_only:
         _upgrade_a_dict(data)
+    if citation_cff:
+        for key in data:
+            data[key].update(_get_bibtex_and_apa(data[key], access_token=access_token))
     return data
 
 
@@ -199,3 +205,41 @@ def update_volume(original_volume: MetricLists, metrics: MetricLists) -> Tuple[M
         [{"metric": key, "count": new.get(key, old.get(key))} for key in all_keys],
         [{"metric": key, "count": diff.get(key)} for key in diff]
     )
+
+
+def _get_bibtex_and_apa(catalog_record: CatalogRecord, access_token: Optional[str]=None) -> Dict[str, str]:
+    """
+    >>> _get_bibtex_and_apa({"url": "https://github.com/htr-united/cremma-medieval"})
+
+    """
+    if "citation-file" not in catalog_record and "github.com" not in catalog_record["url"]:
+        return {}
+    elif "citation-file" not in catalog_record:
+        citation_file_content = get_github_repo_cff(catalog_record["url"], access_token=access_token)
+        if not citation_file_content:
+            return {}
+    else:  # We got a URI
+        try:
+            req = requests.get(catalog_record["citation-file"])
+            req.raise_for_status()
+            citation_file_content = req.text
+        except Exception as E:
+            logger.error(f"Error retrieving CITATION File for {catalog_record['citation-file']}: {str(E)}")
+            if "github.com" in catalog_record["url"]:
+                logger.error(f"Trying to reach github directly")
+                return _get_bibtex_and_apa({"url": catalog_record["url"]})
+            return {}
+
+    citation = cffconvert.Citation(citation_file_content)
+    return_obj = {}
+    try:
+        return_obj["_bibtex"] = citation.as_bibtex()
+    except Exception as E:
+        logger.error(f"Unable to parse as Bibtex {catalog_record['url']} ({E})")
+
+    try:
+        return_obj["_apa"] = citation.as_apalike()
+    except Exception as E:
+        logger.error(f"Unable to parse as APA {catalog_record['url']} ({E})")
+
+    return return_obj
