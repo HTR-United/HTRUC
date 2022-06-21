@@ -209,7 +209,6 @@ def update_volume(original_volume: MetricLists, metrics: MetricLists) -> Tuple[M
 
 def _get_bibtex_and_apa(catalog_record: CatalogRecord, access_token: Optional[str]=None) -> Dict[str, str]:
     """
-    >>> _get_bibtex_and_apa({"url": "https://github.com/htr-united/cremma-medieval"})
 
     """
     if "citation-file-link" not in catalog_record and "github.com" not in catalog_record["url"]:
@@ -223,11 +222,13 @@ def _get_bibtex_and_apa(catalog_record: CatalogRecord, access_token: Optional[st
             req = requests.get(catalog_record["citation-file-link"])
             req.raise_for_status()
             citation_file_content = req.text
+            if "</html>" in citation_file_content.lower():
+                raise Exception("CFF File link is wrong, it returns HTML.")
         except Exception as E:
             logger.error(f"Error retrieving CITATION File for {catalog_record['citation-file-link']}: {str(E)}")
             if "github.com" in catalog_record["url"]:
                 logger.error(f"Trying to reach github directly")
-                return _get_bibtex_and_apa({"url": catalog_record["url"]})
+                return _get_bibtex_and_apa({"url": catalog_record["url"]}, access_token=access_token)
             return {}
 
     try:

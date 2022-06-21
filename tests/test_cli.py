@@ -39,7 +39,7 @@ class TestCLI(TestCase):
                 yaml.dump(new_catalog, f)
             with open("update-metrics.json", "w") as f:
                 # Add 10 files
-                json.dump([{'metric': 'files', 'count': 30}], f)
+                json.dump({"volume": [{'metric': 'files', 'count': 30}]}, f)
 
             rs = self.invoke(
                 ["update-volumes", "catalog.yml", "update-metrics.json",
