@@ -234,6 +234,7 @@ def _get_bibtex_and_apa(catalog_record: CatalogRecord, access_token: Optional[st
         citation = cffconvert.Citation(citation_file_content)
     except Exception as E:
         logger.error(f"Unable to parse CFF for {catalog_record['url']} ({E})")
+        return {}
     return_obj = {}
     try:
         return_obj["_bibtex"] = citation.as_bibtex()
