@@ -212,25 +212,28 @@ def _get_bibtex_and_apa(catalog_record: CatalogRecord, access_token: Optional[st
     >>> _get_bibtex_and_apa({"url": "https://github.com/htr-united/cremma-medieval"})
 
     """
-    if "citation-file" not in catalog_record and "github.com" not in catalog_record["url"]:
+    if "citation-file-link" not in catalog_record and "github.com" not in catalog_record["url"]:
         return {}
-    elif "citation-file" not in catalog_record:
+    elif "citation-file-link" not in catalog_record:
         citation_file_content = get_github_repo_cff(catalog_record["url"], access_token=access_token)
         if not citation_file_content:
             return {}
     else:  # We got a URI
         try:
-            req = requests.get(catalog_record["citation-file"])
+            req = requests.get(catalog_record["citation-file-link"])
             req.raise_for_status()
             citation_file_content = req.text
         except Exception as E:
-            logger.error(f"Error retrieving CITATION File for {catalog_record['citation-file']}: {str(E)}")
+            logger.error(f"Error retrieving CITATION File for {catalog_record['citation-file-link']}: {str(E)}")
             if "github.com" in catalog_record["url"]:
                 logger.error(f"Trying to reach github directly")
                 return _get_bibtex_and_apa({"url": catalog_record["url"]})
             return {}
 
-    citation = cffconvert.Citation(citation_file_content)
+    try:
+        citation = cffconvert.Citation(citation_file_content)
+    except Exception as E:
+        logger.error(f"Unable to parse CFF for {catalog_record['url']} ({E})")
     return_obj = {}
     try:
         return_obj["_bibtex"] = citation.as_bibtex()
