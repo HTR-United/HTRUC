@@ -4,6 +4,7 @@ import logging
 import pandas
 import cffconvert
 import requests
+import re
 
 from htruc.repos import get_github_repo_yaml, get_htr_united_repos, get_github_repo_cff
 from htruc.utils import parse_yaml
@@ -11,6 +12,9 @@ from htruc import validator
 from htruc.schemas import recursive_update
 from htruc.types import CatalogRecord, Catalog
 logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+_ZenodoRecord: re.Pattern = re.compile(r"zenodo\.org/record/([0-9]+)")
 
 
 def _clean_a_dict(catalog: Catalog) -> Catalog:
@@ -108,7 +112,10 @@ def get_all_catalogs(
         _upgrade_a_dict(data)
     if citation_cff:
         for key in data:
-            data[key].update(_get_bibtex_and_apa(data[key], access_token=access_token))
+            up = _get_bibtex_and_apa(data[key], access_token=access_token)
+            if up:
+                logger.info(f"Successfully retrieved Bibtex or/and APA for {key}")
+                data[key].update(up)
     return data
 
 
@@ -211,6 +218,31 @@ def _get_bibtex_and_apa(catalog_record: CatalogRecord, access_token: Optional[st
     """
 
     """
+    through_github = _get_github_citation_file(catalog_record, access_token)
+    if through_github:
+        return through_github
+
+    if _ZenodoRecord.search(catalog_record["url"]):
+        record = _ZenodoRecord.findall(catalog_record["url"])[0]
+        try:
+            req = requests.get(f"https://zenodo.org/api/records/{record}", headers={"Accept": "application/x-bibtex"})
+            req.raise_for_status()
+            return {"_bibtex": req.text}
+        except Exception as E:
+            logger.error(f"Unable to reach Zenodo for Bibtex ({catalog_record['url']}): {E}")
+
+    if "doi.org" in catalog_record["url"]:
+        try:
+            req = requests.get(catalog_record["url"], headers={"Accept": "application/x-bibtex"})
+            req.raise_for_status()
+            return {"_bibtex": req.text}
+        except Exception as E:
+            logger.error(f"Unable to reach the DOI API for Bibtex ({catalog_record['url']}): {E}")
+
+    return {}
+
+
+def _get_github_citation_file(catalog_record: CatalogRecord, access_token: Optional[str] = None) -> Dict[str, str]:
     if "citation-file-link" not in catalog_record and "github.com" not in catalog_record["url"]:
         return {}
     elif "citation-file-link" not in catalog_record:
@@ -228,7 +260,7 @@ def _get_bibtex_and_apa(catalog_record: CatalogRecord, access_token: Optional[st
             logger.error(f"Error retrieving CITATION File for {catalog_record['citation-file-link']}: {str(E)}")
             if "github.com" in catalog_record["url"]:
                 logger.error(f"Trying to reach github directly")
-                return _get_bibtex_and_apa({"url": catalog_record["url"]}, access_token=access_token)
+                return _get_github_citation_file({"url": catalog_record["url"]}, access_token=access_token)
             return {}
 
     try:
