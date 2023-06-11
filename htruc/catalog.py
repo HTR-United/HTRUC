@@ -94,7 +94,10 @@ def get_all_catalogs(
             for uri in data:
                 # We update the catalog if needs be by checking each repo
                 if "github.com" in uri:
-                    data[uri] = get_github_repo_yaml(address=uri, access_token=access_token)
+                    print(f"Fetching {uri} remotely to update metrics")
+                    results = get_github_repo_yaml(address=uri, access_token=access_token)
+                    if results:
+                        data[uri] = results
     if get_distant:
         if isinstance(organizations, str):
             organizations = (organizations, )

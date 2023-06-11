@@ -25,6 +25,7 @@ def get_github_repo_yaml(
     repo = g.get_repo(f"{user}/{repo_name}")
     try:
         text = repo.get_contents("htr-united.yml").decoded_content.decode()
+        print("--- Found htr-united.yml")
     except UnknownObjectException as e:
         return None
     try:
