@@ -69,6 +69,8 @@ def clever_catalog_update(catalog1: Dict, catalog2: Dict) -> Dict:
             for key in ["characters", "volume"]:
                 if key in catalog2[repository]:
                     catalog1[repository][key] = catalog2[repository][key]
+        else:
+            catalog1[repository] = catalog2[repository]
     return catalog1
 
 
