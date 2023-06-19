@@ -1,6 +1,6 @@
 from typing import Optional, Dict, Any, Iterable
 import re
-import yaml
+from ruamel.yaml import YAML, parser
 from github import Github
 from github.GithubException import UnknownObjectException
 from htruc.utils import parse_yaml
@@ -30,7 +30,7 @@ def get_github_repo_yaml(
         return None
     try:
         return parse_yaml(text)
-    except yaml.parser.ParserError:
+    except parser.ParserError:
         print(f"Parse error on {user}/{repo_name}")
         if raise_on_parse_error:
             raise

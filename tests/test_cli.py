@@ -1,5 +1,5 @@
 from unittest import TestCase
-import yaml
+from ruamel.yaml import YAML
 import json
 from click.testing import CliRunner
 
@@ -24,6 +24,7 @@ class TestCLI(TestCase):
         rs = self.invoke(
             ["update-volumes", "tests/test_data/cremma-medieval.yml", "tests/test_data/updated_metrics.json"]
         )
+        print(rs)
         new_catalog = parse_yaml("tests/test_data/cremma-medieval.auto-update.yml")
         self.assertEqual(
             _sort_metrics(new_catalog["volume"]),
@@ -36,6 +37,8 @@ class TestCLI(TestCase):
 
         with self.runner.isolated_filesystem():
             with open("catalog.yml", "w") as f:
+                yaml = YAML()
+                yaml.default_flow_style = False
                 yaml.dump(new_catalog, f)
             with open("update-metrics.json", "w") as f:
                 # Add 10 files

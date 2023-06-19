@@ -1,13 +1,13 @@
 import sys
 import click
 import os.path
-import yaml
+from ruamel.yaml import YAML
 import json
 from typing import Optional, List
 
 from htruc.validator import run
 from htruc.catalog import get_all_catalogs, get_statistics, group_per_year, update_volume, _get_bibtex_and_apa
-from htruc.utils import parse_yaml, create_json_catalog, get_local_or_download
+from htruc.utils import parse_yaml, create_json_catalog, get_local_or_download, dump_yaml
 
 
 def _error(message):
@@ -111,7 +111,7 @@ def make(directory, organization: str, access_token: Optional[str] = None, remot
     )
     click.echo(f"Dumping YAML output into {output}")
     with open(output, "w") as f:
-        yaml.dump(list(catalog.values()), f, sort_keys=False)
+        dump_yaml(list(catalog.values()), f)
 
     if json:
         click.echo(f"Dumping JSON output into {json}")
@@ -186,7 +186,7 @@ def catalog_volume_update(catalog_file, metrics_json, inplace):
         filename = ".".join([*filename[:-1], "auto-update", filename[-1]])
     click.echo(f"Writing the update volumes in {filename}")
     with open(filename, "w") as f:
-        yaml.dump(record, f, sort_keys=False)
+        dump_yaml(record, f, sort_keys=False)
 
 
 @cli.command("upgrade")
@@ -203,7 +203,7 @@ def upgrade(files):
             continue
         file.close()
         with open(file.name, "w") as f:
-            yaml.dump(catalog, f, sort_keys=False)
+            dump_yaml(catalog, f, sort_keys=False)
 
 
 if __name__ == "__main__":

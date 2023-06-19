@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import json
 
 from jsonschema import Draft7Validator
-from yaml.parser import ParserError
+from ruamel.yaml.parser import ParserError
 
 from htruc.utils import parse_yaml, get_local_or_download
 

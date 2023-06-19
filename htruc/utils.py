@@ -1,14 +1,41 @@
 from typing import Union, TextIO, Dict, Any, List, Optional
 import os.path
-import yaml
+from ruamel.yaml import YAML
+from ruamel.yaml.comments import CommentedMap
 import requests
 import json
+
+
+def _yaml_rec_sort(d):
+    try:
+        if isinstance(d, CommentedMap):
+            return d.sort()
+    except AttributeError:
+        pass
+    if isinstance(d, dict):
+        # could use dict in newer python versions
+        res = CommentedMap()
+        for k in sorted(d.keys()):
+            res[k] = _yaml_rec_sort(d[k])
+        return res
+    if isinstance(d, list):
+        for idx, elem in enumerate(d):
+            d[idx] = _yaml_rec_sort(elem)
+    return d
+
+
+def dump_yaml(document: Any, file: TextIO, sort_keys: bool = True):
+    yaml = YAML()
+    if sort_keys:
+        yaml.dump(document, file)
+    else:
+        yaml.dump(_yaml_rec_sort(document), file)
 
 
 def parse_yaml(file: Union[str, TextIO]) -> Dict[str, Any]:
     """ Parse a yaml file
 
-    >>> parse_yaml('tests/test_data/simple_yaml.yml')
+    >>> parse_yaml(os.path.dirname(__file__)+'/../tests/test_data/simple_yaml.yml')
     {'test': 'yes'}
     """
     if isinstance(file, str):
@@ -19,7 +46,9 @@ def parse_yaml(file: Union[str, TextIO]) -> Dict[str, Any]:
             content = file
     else:
         content = file.read()
-    return yaml.load(content, Loader=yaml.Loader)
+
+    yaml = YAML(typ=['rt', 'string'])
+    return yaml.load(content) or {}
 
 
 def create_json_catalog(catalog: Dict[str, Dict], ids_files: Optional[str]) -> Dict[str, Dict]:
