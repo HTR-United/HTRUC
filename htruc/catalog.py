@@ -63,6 +63,15 @@ def get_local_yaml(directory: str, keep_valid_only: bool = True) -> Catalog:
     return out
 
 
+def clever_catalog_update(catalog1: Dict, catalog2: Dict) -> Dict:
+    for repository in catalog2:
+        if repository in catalog1:
+            for key in ["characters", "volume"]:
+                if key in catalog2[repository]:
+                    catalog1[repository][key] = catalog2[repository][key]
+    return catalog1
+
+
 def get_all_catalogs(
     access_token: Optional[str] = None,
     local_directory: Optional[str] = None,
@@ -87,7 +96,7 @@ def get_all_catalogs(
     :param auto_upgrade: Upgrade automatically all schemas to the latest version (Only applied if keep_valid_only is
         True)
     """
-    data = {}
+    data: Catalog = {}
     if local_directory:
         data.update(get_local_yaml(directory=local_directory, keep_valid_only=False))
         if check_link:
@@ -102,7 +111,8 @@ def get_all_catalogs(
         if isinstance(organizations, str):
             organizations = (organizations, )
         for orga in organizations:
-            data.update(
+            data = clever_catalog_update(
+                data,
                 get_htr_united_repos(
                     access_token=access_token,
                     main_organization=orga,
