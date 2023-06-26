@@ -29,3 +29,13 @@ def upgrade_2021_10_15_to_2022_04_15(catalog_record: CatalogRecord, verbose=True
     log(f"--> Automatically upgraded with `production-software`=`Unknown`", verbose=verbose, use_log=use_log)
 
     return catalog_record
+
+
+def upgrade_2022_04_15_to_2023_06_27(catalog_record: CatalogRecord, verbose=True, use_log=False) -> CatalogRecord:
+    catalog_record["schema"] = "https://htr-united.github.io/schema/2023-06-27/schema.json"
+    log("Upgrading from 2022-04-15 to 2023-06-27", verbose=verbose, use_log=use_log)
+
+    catalog_record["automatically-aligned"] = False
+    log(f"--> Automatically set to False automatically-aligned flag", verbose=verbose, use_log=use_log)
+
+    return catalog_record

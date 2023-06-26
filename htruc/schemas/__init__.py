@@ -1,5 +1,5 @@
 from typing import Dict, Tuple, Callable, AnyStr, Iterable
-from htruc.schemas.upgrade_path import upgrade_2021_10_15_to_2022_04_15
+from htruc.schemas.upgrade_path import upgrade_2021_10_15_to_2022_04_15, upgrade_2022_04_15_to_2023_06_27
 from htruc.types import SchemaVersion, CatalogRecord
 
 
@@ -7,10 +7,12 @@ from htruc.types import SchemaVersion, CatalogRecord
 UpgradeOrder: Tuple[SchemaVersion, ...] = (
     "https://htr-united.github.io/schema/2021-10-15/schema.json",
     "https://htr-united.github.io/schema/2022-04-15/schema.json",
+    "https://htr-united.github.io/schema/2023-06-27/schema.json",
 )
 
 UpgradeFunction: Dict[str, Callable[[CatalogRecord], CatalogRecord]] = {
-    UpgradeOrder[0]: upgrade_2021_10_15_to_2022_04_15
+    UpgradeOrder[0]: upgrade_2021_10_15_to_2022_04_15,
+    UpgradeOrder[1]: upgrade_2022_04_15_to_2023_06_27
 }
 
 
