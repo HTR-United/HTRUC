@@ -282,6 +282,8 @@ def _get_github_citation_file(catalog_record: CatalogRecord, access_token: Optio
         citation = cffconvert.Citation(citation_file_content)
     except Exception as E:
         logger.error(f"Unable to parse CFF for {catalog_record['url']} ({E})")
+        nl = "\n"
+        logger.error(f"Content: \n{citation_file_content.replace(nl, nl+'>>>    ')}")
         return {}
     return_obj = {}
     try:
