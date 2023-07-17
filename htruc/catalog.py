@@ -131,7 +131,7 @@ def get_all_catalogs(
             if up:
                 logger.info(f"Successfully retrieved Bibtex or/and APA for {key}")
                 data[key].update(up)
-    return data
+    return dict(sorted(data.items()))
 
 
 def get_statistics(repositories: Catalog) -> pandas.DataFrame:
@@ -271,6 +271,8 @@ def _get_github_citation_file(catalog_record: CatalogRecord, access_token: Optio
             citation_file_content = req.text
             if "</html>" in citation_file_content.lower():
                 raise Exception("CFF File link is wrong, it returns HTML.")
+            elif citation_file_content[0] == "{":
+                raise Exception("Got JSON at the given endpoint instead of YAML")
         except Exception as E:
             logger.error(f"Error retrieving CITATION File for {catalog_record['citation-file-link']}: {str(E)}")
             if "github.com" in catalog_record["url"]:
@@ -283,7 +285,7 @@ def _get_github_citation_file(catalog_record: CatalogRecord, access_token: Optio
     except Exception as E:
         logger.error(f"Unable to parse CFF for {catalog_record['url']} ({E})")
         nl = "\n"
-        logger.error(f"Content: \n{citation_file_content.replace(nl, nl+'>>>    ')}")
+        logger.error(f"Content: \n>>>    {citation_file_content.replace(nl, nl+'>>>    ')}")
         return {}
     return_obj = {}
     try:
