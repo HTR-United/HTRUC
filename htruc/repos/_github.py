@@ -1,5 +1,7 @@
 from typing import Optional, Dict, Any, Iterable
 import re
+
+import github
 from ruamel.yaml import YAML, parser
 from github import Github
 from github.GithubException import UnknownObjectException
@@ -22,12 +24,15 @@ def get_github_repo_yaml(
     if repo_name.endswith(".git"):
         repo_name = repo_name[:-4]
     g = Github(access_token)
-    repo = g.get_repo(f"{user}/{repo_name}")
     try:
+        repo = g.get_repo(f"{user}/{repo_name}")
         text = repo.get_contents("htr-united.yml").decoded_content.decode()
         print("--- Found htr-united.yml")
     except UnknownObjectException as e:
         return None
+    except github.GithubException as e:
+        return None
+
     try:
         return parse_yaml(text)
     except parser.ParserError:
