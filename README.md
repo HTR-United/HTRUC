@@ -33,6 +33,7 @@ Run `htruc upgrade yourYamlFile.yml`
 ### Upgrade metrics using [HTR-United Metadata Generator (HUMg)](https://github.com/HTR-United/htr-united-metadata-generator)
 
 Run `htruc update-volumes YourYamlFile.yml MetricFileFromHUMG.jons --inplace`
+
 ---
 
 Logo by [Alix Chagué](https://alix-tz.github.io).
