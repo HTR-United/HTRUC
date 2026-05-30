@@ -18,8 +18,8 @@ NAME = 'htruc'
 DESCRIPTION = 'HTRUC, a toolkit for HTR-United cataloging'
 URL = 'https://github.com/htr-united/htrvc'
 AUTHOR = 'Thibault Clérice'
-REQUIRES_PYTHON = '>=3.8.0'
-VERSION = "1.1.3"
+REQUIRES_PYTHON = '>=3.12.0'
+VERSION = "1.1.4"
 
 # What packages are required for this module to be executed?
 
@@ -118,7 +118,7 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.12',
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Python :: Implementation :: PyPy',
         'Topic :: Text Processing :: Linguistic'
