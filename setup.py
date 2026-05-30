@@ -79,11 +79,14 @@ class UploadCommand(Command):
         except OSError:
             pass
 
+        self.status('Installing build tools…')
+        os.system('{0} -m pip install --quiet build twine'.format(sys.executable))
+
         self.status('Building Source and Wheel distribution…')
         os.system('{0} -m build'.format(sys.executable))
 
         self.status('Uploading the package to PyPI via Twine…')
-        os.system('twine upload dist/*')
+        os.system('{0} -m twine upload dist/*'.format(sys.executable))
 
         self.status('Pushing git tags…')
         os.system('git tag v{0}'.format(about['__version__']))
