@@ -19,7 +19,7 @@ DESCRIPTION = 'HTRUC, a toolkit for HTR-United cataloging'
 URL = 'https://github.com/htr-united/htrvc'
 AUTHOR = 'Thibault Clérice'
 REQUIRES_PYTHON = '>=3.12.0'
-VERSION = "1.1.4"
+VERSION = "1.1.5"
 
 # What packages are required for this module to be executed?
 
