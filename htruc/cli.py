@@ -111,7 +111,7 @@ def make(directory, organization: str, access_token: Optional[str] = None, remot
     )
     click.echo(f"Dumping YAML output into {output}")
     with open(output, "w") as f:
-        dump_yaml(list(catalog.values()), f)
+        dump_yaml(list(catalog.values()), f, sort_keys=False)
 
     if json:
         click.echo(f"Dumping JSON output into {json}")

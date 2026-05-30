@@ -7,13 +7,7 @@ import json
 
 
 def _yaml_rec_sort(d):
-    try:
-        if isinstance(d, CommentedMap):
-            return d.sort()
-    except AttributeError:
-        pass
     if isinstance(d, dict):
-        # could use dict in newer python versions
         res = CommentedMap()
         for k in sorted(d.keys()):
             res[k] = _yaml_rec_sort(d[k])
