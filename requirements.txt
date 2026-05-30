@@ -1,6 +1,6 @@
 click>=8.0.1,<9.0.0
 colorama>=0.4.4
-jsonschema>=4.0.0
+jsonschema>=3.0.0,<4
 pandas>=2.0.0
 requests>=2.26.0
 PyGithub>=2.0.0
