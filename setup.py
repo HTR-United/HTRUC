@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Note: To use the 'upload' functionality of this file, you must:
-#   $ pip install twine
+#   $ pip install twine build
 
 import io
 import os
@@ -28,7 +28,7 @@ with open(os.path.join(here, 'requirements.txt')) as f:
 
 # What packages are optional?
 EXTRAS = {
-    # 'fancy feature': ['django'],
+    'upload': ['twine', 'build'],
 }
 
 # The rest you shouldn't have to touch too much :)
